@@ -13,11 +13,12 @@ def scrape():
     browser = init_browser()
     mars_data = {}
 
-    nasa_news_url = "https://mars.nasa.gov/news/"
-    browser.visit(nasa_news_url)
+    nasa = "https://mars.nasa.gov/news/"
+    browser.visit(nasa)
+    time.sleep(2)
 
-    nasa_news_html = browser.html
-    soup = bs(nasa_news_html,"html.parser")
+    html = browser.html
+    soup = bs(html,"html.parser")
 
     #scrapping latest news about mars from nasa
     news_title = soup.find("div",class_="content_title").text
@@ -26,11 +27,12 @@ def scrape():
     mars_data['news_paragraph'] = news_paragraph 
     
     #Mars Featured Image
-    nasa_image_url = "https://www.jpl.nasa.gov/spaceimages/?search=&category=featured#submit"
-    browser.visit(nasa_image_url)
+    nasa_image = "https://www.jpl.nasa.gov/spaceimages/?search=&category=featured#submit"
+    browser.visit(nasa_image)
+    time.sleep(2)
 
     from urllib.parse import urlsplit
-    base_url = "{0.scheme}://{0.netloc}/".format(urlsplit(nasa_image_url))
+    base_url = "{0.scheme}://{0.netloc}/".format(urlsplit(nasa_image))
     
     xpath = "//*[@id=\"page\"]/section[3]/div/ul/li[1]/a/div/div[2]/img"
 
@@ -39,28 +41,30 @@ def scrape():
     results = browser.find_by_xpath(xpath)
     img = results[0]
     img.click()
+    time.sleep(2)
     
     #get image url using BeautifulSoup
-    image_html = browser.html
-    soup = bs(image_html, "html.parser")
+    html_image = browser.html
+    soup = bs(html_image, "html.parser")
     img_url = soup.find("img", class_="fancybox-image")["src"]
-    image_url = base_url + img_url
-    mars_data["featured_image"] = image_url
+    full_img_url = base_url + img_url
+    mars_data["featured_image"] = full_img_url
     
     # #### Mars Weather
 
     #get mars weather's latest tweet from the website
-    weather_url = "https://twitter.com/marswxreport?lang=en"
-    browser.visit(weather_url)
-    weather_html = browser.html
-    soup = bs(weather_html, "html.parser")
+    url_weather = "https://twitter.com/marswxreport?lang=en"
+    browser.visit(url_weather)
+    html_weather = browser.html
+    soup = bs(html_weather, "html.parser")
     mars_weather = soup.find("p", class_="TweetTextSize TweetTextSize--normal js-tweet-text tweet-text").text
     mars_data["mars_weather"] = mars_weather
 
     # #### Mars Facts
 
-    facts_url = "https://space-facts.com/mars/"
-    table = pd.read_html(facts_url)
+    url_facts = "https://space-facts.com/mars/"
+    time.sleep(2)
+    table = pd.read_html(url_facts)
     table[0]
 
     df_mars_facts = table[0]
@@ -70,27 +74,28 @@ def scrape():
     mars_html_table = mars_html_table.replace("\n", "")
     mars_data["mars_facts_table"] = mars_html_table
 
-    # #### Mars Hemisperes
 
-    hemis_url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
-    browser.visit(hemis_url)
-    hemis_html = browser.html
-    soup = bs(hemis_html, 'html.parser')
-    hemisphere_image_urls=[]
+    url4 = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(url4)
+    html = browser.html
+    soup = bs(html, 'html.parser')
+    mars_hemis=[]
 
     for i in range (4):
         time.sleep(5)
         images = browser.find_by_tag('h3')
         images[i].click()
-        hemis_html = browser.html
-        soup = bs(hemis_html, 'html.parser')
+        html = browser.html
+        soup = bs(html, 'html.parser')
         partial = soup.find("img", class_="wide-image")["src"]
         img_title = soup.find("h2",class_="title").text
         img_url = 'https://astrogeology.usgs.gov'+ partial
         dictionary={"title":img_title,"img_url":img_url}
-        hemisphere_image_urls.append(dictionary)
+        mars_hemis.append(dictionary)
         browser.back()
 
-    mars_data['mars_hemis'] = hemisphere_image_urls
-    # Return the dictionary
+    mars_data['mars_hemis'] = mars_hemis
+
+    
+
     return mars_data
